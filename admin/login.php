@@ -5,11 +5,13 @@ if (isset($_POST['login'])) {
     $email    = $_POST['email']; //untuk mengambil nilai dari input
     $password = $_POST['password'];
 
-    $queryLogin = mysqli_query($koneksi, "SELECT * FROM users WHERE email='$email'");
+    $queryLogin = mysqli_query($connection, "SELECT * FROM users WHERE email='$email'");
     // mysqli_num_row() : untuk melihat total data di dalam table
     if (mysqli_num_rows($queryLogin) > 0) {
         $rowLogin = mysqli_fetch_assoc($queryLogin);
         if ($password == $rowLogin['password']) {
+            $_SESSION['name'] = $rowLogin['name'];
+            $_SESSION['id'] = $rowLogin['id'];
             header("location:index.php");
         } else {
             header("location:login.php?login=gagal");
@@ -179,7 +181,7 @@ if (isset($_POST['login'])) {
                                         id="password"
                                         class="form-control"
                                         name="password"
-                                        placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;"
+                                        placeholder="Masukkan password anda"
                                         aria-describedby="password" />
                                     <span class="input-group-text cursor-pointer"><i class="bx bx-hide"></i></span>
                                 </div>

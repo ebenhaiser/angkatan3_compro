@@ -7,14 +7,74 @@ if (empty($_SESSION)) {
   header("Location: logout.php");
 }
 
+
 $queryUsers = mysqli_query($connection, "SELECT * FROM users");
 
+// BUAT DELETE USER
+if(isset($_GET['delete'])) {
+$id = $_GET['delete'];
 
+$queryDelete = mysqli_query($connection, "DELETE FROM users WHERE id = '$id'");
+header('Location: user.php');
+
+};
+// BUAT ADD USER
+if(isset($_POST['add'])) {
+$name = $_POST['name'];
+$email = $_POST['email'];
+$password = $_POST['password'];
+
+// $_POST  : from input name=''
+// $_GET   : url ?param=''
+// $_FILES : ambil nilai dari input type file
+if(isset($_FILES['profile_img']['name'])) {
+  $img_name = $_FILES['profile_img']['name'];
+  $img_size = $_FILES['profile_img']['size'];
+
+  $ext = array('png', 'jpg', 'jpeg');
+  $img_ext = pathinfo($img_name, PATHINFO_EXTENSION);
+
+  // JIKA EXTENSI FOTO TIDAK ADA EXT YANG TERDAFTAR DI ARRAY EXT
+  if(!in_array($img_ext, $ext)) {
+    echo "Upload failed, photo extension does not match requirement";
+    die;
+  } else {
+    // pindahkan gambar dari tmp 
+    move_uploaded_file($_FILES['profile_img']['tmp_name'], 'upload/' . $img_name);
+    $queryInsert = mysqli_query($connection, "INSERT INTO users(name, email, password, profile_img) VALUES ('$name', '$email', '$password', '$img_name')");
+  };
+} else {
+  $queryInsert = mysqli_query($connection, "INSERT INTO users(name, email, password) VALUES ('$name', '$email', '$password')");
+};
+
+header('location: user.php?add=success');
+};
+
+
+// BUAT EDIT USER
+if(isset($_GET['edit'])) {
+$id = $_GET['edit'];
+$queryEdit = mysqli_query($connection, "SELECT * FROM users WHERE id='$id'");
+$rowEdit = mysqli_fetch_assoc($queryEdit);
+}
+
+if(isset($_POST['edit'])) {
+$name = $_POST['name'];
+$email = $_POST['email'];
+$password = $_POST['password'] ? $_POST['password'] : $rowEdit['password'];
+
+// if($_POST['password']){
+// $password = $_POST['password'];
+// } else {
+// $password = $rowEdit['password'];
+// }
+
+$updateUser = mysqli_query($connection, "UPDATE users SET name='$name', email='$email', password='$password' WHERE
+id='$id' ");
+header('location: user.php?edit=success');
+}
 
 ?>
-
-
-
 <!DOCTYPE html>
 
 <!-- =========================================================
@@ -74,50 +134,36 @@ $queryUsers = mysqli_query($connection, "SELECT * FROM users");
                         <div class="row">
                             <div class="col-sm-12">
                                 <div class="card">
-                                    <div class="card-header">Data User</div>
+                                    <div class="card-header"><strong><?php echo isset($_GET['edit']) ? 'Edit' : 'Add'?> User</strong></div>
                                     <div class="card-body">
-                                        <?php if(isset($_GET['hapus'])) : ?>
-                                        <div class="alert alert-success" role="alert">
-                                            Data berhasil dihapus
-                                        </div>
-                                        <?php endif ?>
-                                        <div align="right" class="mb-3">
-                                            <a href="add-user.php" class="btn btn-primary">
-                                                Add User
-                                            </a>
-                                        </div>
-                                        <table class="table table-bordered">
-                                            <thead>
-                                                <tr>
-                                                    <th>#</th>
-                                                    <th>Name</th>
-                                                    <th>Email</th>
-                                                    <th>Settings</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <?php 
-                                                $no = 1;
-                                                while($rowUsers = mysqli_fetch_assoc($queryUsers)) : 
-                                                ?>
-                                                <tr>
-                                                    <td><?php echo $no++ ?></td>
-                                                    <td><?php echo $rowUsers['name'] ?></td>
-                                                    <td><?php echo $rowUsers['email'] ?></td>
-                                                    <td>
-                                                        <a class="btn btn-success" href="add-user.php?edit=<?php echo $rowUsers['id'] ?>">
-                                                            <span class="tf-icon bx bx-pencil"></span>
-                                                        </a>
-                                                        |
-                                                        <a onclick="return confirm ('Apakah anda yakin akan menghapus data ini?')" class="btn btn-danger"
-                                                            href="add-user.php?delete=<?php echo $rowUsers['id'] ?>">
-                                                            <span class="tf-icon bx bx-trash"></span>
-                                                        </a>
-                                                    </td>
-                                                </tr>
-                                                <?php endwhile ?>
-                                            </tbody>
-                                        </table>
+                                        <form action="" method="post" enctype="multipart/form-data">
+                                          <div class="mb-3 row">
+                                            <div class="col-sm-6 ">
+                                              <label for="">Nama : </label>
+                                              <input type="text" class="form-control" name="name" placeholder="Masukkan nama anda" value="<?php echo isset($_GET['edit']) ? $rowEdit['name'] : '' ?>" required>
+                                            </div>
+                                            <div class="col-sm-6">
+                                              <label for="">Email : </label>
+                                              <input type="email" class="form-control" name="email" placeholder="Masukkan email anda" value="<?php echo isset($_GET['edit']) ? $rowEdit['email'] : '' ?>" required>
+                                            </div>
+                                          </div>
+                                          <div class="mb-3 row">  
+                                            <div class="col-sm-6">
+                                              <label for="">Password : </label>
+                                              <input type="password" class="form-control" name="password" placeholder="Masukkan nama anda" value="" <?php echo isset($_GET['edit']) ? '' : 'required' ?>>
+                                            </div>
+                                            <div class="col-sm-6">
+                                              <label for="">Profile Picture : </label>
+                                              <input type="file" class="form-control" name="profile_img">
+                                            </div>
+                                          </div>
+                                          <div class="mb-3">
+                                            <button class="btn btn-primary" name="<?php echo isset($_GET['edit']) ? 'edit' : 'add' ?>" type="submit">
+                                              Save
+                                            </button>
+                                          </div>
+                                        </form>
+                                        
                                     </div>
                                 </div>
                             </div>
